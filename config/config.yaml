@@ -1,0 +1,165 @@
+# Application Configuration
+app:
+  name: "Claims Risk Classification"
+  version: "1.0.0"
+  environment: "development"
+  debug: true
+  log_level: "INFO"
+
+# Data Configuration
+data:
+  sources:
+    database:
+      host: "localhost"
+      port: 5432
+      database: "claims_db"
+      username: "admin"
+      password: "password"
+    s3:
+      bucket: "claims-data-bucket"
+      region: "us-east-1"
+      structured_data_prefix: "structured/"
+      unstructured_data_prefix: "unstructured/"
+  
+  validation:
+    max_missing_percentage: 0.15
+    min_records_required: 1000
+    schema_validation_enabled: true
+    data_quality_checks_enabled: true
+  
+  preprocessing:
+    outlier_detection_method: "IQR"
+    outlier_threshold: 1.5
+    feature_scaling_method: "standard"
+    text_vectorization_method: "tfidf"
+    max_features: 10000
+
+# Model Configuration
+models:
+  target_variable: "risk_level"
+  features:
+    categorical: ["claim_type", "region", "customer_segment"]
+    numerical: ["claim_amount", "customer_age", "policy_duration"]
+    text: ["claim_description", "notes"]
+  
+  algorithms:
+    random_forest:
+      n_estimators: [100, 200, 300]
+      max_depth: [10, 20, 30]
+      min_samples_split: [2, 5, 10]
+    
+    xgboost:
+      n_estimators: [100, 200, 300]
+      max_depth: [3, 6, 9]
+      learning_rate: [0.01, 0.1, 0.2]
+    
+    neural_network:
+      hidden_layers: [64, 128, 256]
+      dropout_rate: [0.2, 0.3, 0.4]
+      batch_size: [32, 64, 128]
+      epochs: 100
+  
+  evaluation:
+    test_size: 0.2
+    validation_size: 0.1
+    cross_validation_folds: 5
+    metrics: ["accuracy", "precision", "recall", "f1", "roc_auc"]
+    
+  training:
+    auto_hyperparameter_tuning: true
+    early_stopping: true
+    patience: 10
+    save_best_model: true
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  reload: false
+  cors_origins: ["*"]
+  rate_limiting:
+    requests_per_minute: 100
+  
+  authentication:
+    enabled: false
+    secret_key: "your-secret-key-here"
+    algorithm: "HS256"
+    token_expire_minutes: 30
+
+# Monitoring Configuration
+monitoring:
+  drift_detection:
+    enabled: true
+    statistical_tests: ["ks", "chi2", "psi"]
+    threshold: 0.1
+    check_frequency: "daily"
+  
+  performance_tracking:
+    enabled: true
+    metrics_retention_days: 90
+    alert_thresholds:
+      accuracy_drop: 0.05
+      precision_drop: 0.05
+      recall_drop: 0.05
+  
+  logging:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    file_path: "logs/application.log"
+    max_file_size: "10MB"
+    backup_count: 5
+
+# Storage Configuration
+storage:
+  model_registry:
+    type: "s3"
+    bucket: "claims-model-registry"
+    prefix: "models/"
+  
+  artifacts:
+    type: "s3"
+    bucket: "claims-artifacts"
+    prefix: "artifacts/"
+  
+  data_cache:
+    type: "redis"
+    host: "localhost"
+    port: 6379
+    db: 0
+    expire_time: 3600
+
+# Deployment Configuration
+deployment:
+  container:
+    image_name: "claims-risk-classifier"
+    tag: "latest"
+    port: 8000
+  
+  aws:
+    region: "us-east-1"
+    ecs_cluster: "claims-cluster"
+    task_definition: "claims-task"
+    service_name: "claims-service"
+    desired_count: 2
+    
+  scaling:
+    min_capacity: 1
+    max_capacity: 10
+    target_cpu_utilization: 70
+    target_memory_utilization: 80
+
+# Security Configuration
+security:
+  data_encryption:
+    enabled: true
+    algorithm: "AES-256"
+  
+  api_security:
+    rate_limiting: true
+    input_validation: true
+    output_sanitization: true
+  
+  aws_security:
+    iam_role: "ClaimsMLRole"
+    kms_key_id: "alias/claims-ml-key"

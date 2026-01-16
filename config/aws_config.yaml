@@ -1,0 +1,222 @@
+# AWS Service Configuration
+aws:
+  region: "us-east-1"
+  account_id: "123456789012"  # Replace with your AWS account ID
+  
+  # S3 Configuration
+  s3:
+    data_bucket: "claims-data-bucket"
+    model_bucket: "claims-model-registry"
+    artifacts_bucket: "claims-artifacts"
+    logs_bucket: "claims-logs"
+    versioning_enabled: true
+    encryption_enabled: true
+    lifecycle_policies:
+      raw_data_retention_days: 365
+      processed_data_retention_days: 180
+      logs_retention_days: 90
+  
+  # RDS Configuration
+  rds:
+    engine: "postgresql"
+    instance_class: "db.t3.medium"
+    allocated_storage: 100
+    database_name: "claims_db"
+    username: "admin"
+    multi_az: true
+    backup_retention_period: 7
+    
+  # Lambda Configuration
+  lambda:
+    inference_function:
+      name: "claims-inference"
+      runtime: "python3.9"
+      timeout: 300
+      memory_size: 1024
+      environment_variables:
+        MODEL_BUCKET: "claims-model-registry"
+        LOG_LEVEL: "INFO"
+    
+    batch_processing_function:
+      name: "claims-batch-processing"
+      runtime: "python3.9"
+      timeout: 900
+      memory_size: 3008
+  
+  # ECS Configuration
+  ecs:
+    cluster_name: "claims-cluster"
+    task_definition:
+      family: "claims-task"
+      cpu: "1024"
+      memory: "2048"
+      network_mode: "awsvpc"
+      requires_compatibilities: ["FARGATE"]
+    
+    service:
+      name: "claims-service"
+      desired_count: 2
+      platform_version: "LATEST"
+      subnets:
+        - "subnet-12345"
+        - "subnet-67890"
+      security_groups:
+        - "sg-claims-service"
+  
+  # API Gateway Configuration
+  api_gateway:
+    name: "claims-api"
+    stage_name: "prod"
+    throttle_burst_limit: 5000
+    throttle_rate_limit: 2000
+    
+  # CloudWatch Configuration
+  cloudwatch:
+    log_groups:
+      api_logs: "/aws/lambda/claims-api"
+      training_logs: "/aws/ecs/claims-training"
+      monitoring_logs: "/aws/lambda/claims-monitoring"
+    
+    alarms:
+      high_error_rate:
+        threshold: 0.05
+        comparison_operator: "GreaterThanThreshold"
+        evaluation_periods: 2
+        period: 300
+      
+      high_latency:
+        threshold: 5000  # milliseconds
+        comparison_operator: "GreaterThanThreshold"
+        evaluation_periods: 2
+        period: 300
+  
+  # SageMaker Configuration
+  sagemaker:
+    training_instance_type: "ml.m5.xlarge"
+    inference_instance_type: "ml.t2.medium"
+    model_package_group: "claims-models"
+    
+    training_job:
+      max_runtime_in_seconds: 86400
+      max_parallel_training_jobs: 2
+      max_training_jobs: 10
+    
+    endpoint_config:
+      initial_instance_count: 1
+      initial_variant_weight: 1
+      auto_scaling:
+        min_capacity: 1
+        max_capacity: 5
+        target_tracking_scaling_policy:
+          target_value: 70.0
+          scale_in_cooldown: 300
+          scale_out_cooldown: 300
+  
+  # EventBridge Configuration
+  eventbridge:
+    rules:
+      model_retraining_schedule:
+        name: "claims-model-retraining"
+        schedule_expression: "rate(7 days)"
+        
+      data_drift_check:
+        name: "claims-drift-check"
+        schedule_expression: "rate(1 day)"
+  
+  # SNS Configuration
+  sns:
+    topics:
+      model_alerts: "claims-model-alerts"
+      drift_alerts: "claims-drift-alerts"
+      performance_alerts: "claims-performance-alerts"
+    
+    subscriptions:
+      - protocol: "email"
+        endpoint: "admin@company.com"
+      - protocol: "sms"
+        endpoint: "+1234567890"
+  
+  # IAM Configuration
+  iam:
+    roles:
+      lambda_execution_role: "ClaimsLambdaExecutionRole"
+      ecs_task_role: "ClaimsECSTaskRole"
+      sagemaker_role: "ClaimsSageMakerRole"
+    
+    policies:
+      s3_access_policy: "ClaimsS3AccessPolicy"
+      rds_access_policy: "ClaimsRDSAccessPolicy"
+      cloudwatch_policy: "ClaimsCloudWatchPolicy"
+  
+  # VPC Configuration
+  vpc:
+    vpc_id: "vpc-12345"
+    private_subnets:
+      - "subnet-private-1"
+      - "subnet-private-2"
+    public_subnets:
+      - "subnet-public-1"
+      - "subnet-public-2"
+    
+    security_groups:
+      api_security_group: "sg-api"
+      database_security_group: "sg-database"
+      ecs_security_group: "sg-ecs"
+  
+  # KMS Configuration
+  kms:
+    key_id: "alias/claims-ml-key"
+    key_usage: "ENCRYPT_DECRYPT"
+    key_spec: "SYMMETRIC_DEFAULT"
+    
+  # Secrets Manager Configuration
+  secrets_manager:
+    secrets:
+      database_credentials: "claims/database/credentials"
+      api_keys: "claims/api/keys"
+      encryption_keys: "claims/encryption/keys"
+
+# Cost Optimization
+cost_optimization:
+  s3:
+    intelligent_tiering: true
+    lifecycle_transitions:
+      - storage_class: "STANDARD_IA"
+        days: 30
+      - storage_class: "GLACIER"
+        days: 90
+      - storage_class: "DEEP_ARCHIVE"
+        days: 365
+  
+  compute:
+    use_spot_instances: true
+    spot_instance_types: ["ml.m5.large", "ml.m5.xlarge"]
+    auto_shutdown_idle_resources: true
+    idle_timeout_minutes: 60
+
+# Monitoring and Alerting
+monitoring:
+  dashboards:
+    - name: "Claims ML Pipeline Dashboard"
+      widgets:
+        - "Model Performance Metrics"
+        - "Data Drift Detection"
+        - "API Response Times"
+        - "Error Rates"
+        - "Cost Tracking"
+  
+  alerts:
+    - name: "High Error Rate"
+      threshold: 5
+      metric: "ErrorRate"
+      comparison_operator: "GreaterThanThreshold"
+    
+    - name: "Model Drift Detected"
+      threshold: 0.1
+      metric: "DriftScore"
+      comparison_operator: "GreaterThanThreshold"
+    
+    - name: "High API Latency"
+      threshold: 2000
+      metric: "ResponseTime"
+      comparison_operator: "GreaterThanThreshold"
